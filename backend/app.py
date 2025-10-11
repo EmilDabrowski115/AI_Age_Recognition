@@ -8,15 +8,7 @@ app = FastAPI(title="AI Age Recognition")
 def health_check():
     return JSONResponse({"status": "ok", "message": "API is running"})
 
-# Health endpoint
-@app.get("/login")
-def health_check():
-    return JSONResponse({"status": "ok", "message": "API is running"})
 
-# Health endpoint
-@app.get("/signup")
-def health_check():
-    return JSONResponse({"status": "ok", "message": "API is running"})
 
 
 

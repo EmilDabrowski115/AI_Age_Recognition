@@ -1,0 +1,1 @@
+scrren shoty dzialania, i zasady dzialania, odpowiedzi endpoitow i wyglad aplikacji

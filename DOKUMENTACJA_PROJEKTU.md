@@ -202,7 +202,7 @@ Response:
 ### Instalacja
 ```bash
 # Klonowanie repo
-git clone https://github.com/your-username/AI_Age_Recognition.git
+git clone https://github.com/edabrowski/AI_Age_Recognition.git
 cd AI_Age_Recognition
 
 # Wirtualne środowisko

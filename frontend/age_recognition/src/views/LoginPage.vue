@@ -1,7 +1,7 @@
 <template>
   <div class="register-page">
     <div class="register-container">
-      <h1>Create Account</h1>
+      <h1>Login</h1>
 
       <form @submit.prevent="handleSubmit" class="register-form">
         <div class="form-group">
@@ -27,8 +27,8 @@
         </div>
 
         <button type="submit" class="submit-button" :disabled="isSubmitting">
-          <span v-if="!isSubmitting">Register</span>
-          <span v-else>Registering...</span>
+          <span v-if="!isSubmitting">Login</span>
+          <span v-else>Logging in...</span>
         </button>
       </form>
     </div>
@@ -52,13 +52,13 @@ const isSubmitting = ref(false)
 const handleSubmit = async () => {
   isSubmitting.value = true
   try {
-    await userService.register({
+    await userService.login({
       username: formData.username,
       password: formData.password
     })
-    router.push('/') // redirect po rejestracji
+    router.push('/') // redirect po poprawnym logowaniu
   } catch (err) {
-    console.error('Registration failed:', err)
+    console.error('Login failed:', err)
   } finally {
     isSubmitting.value = false
   }

@@ -18,6 +18,11 @@
           <span class="button-text">Register</span>
           <div class="button-glow"></div>
         </router-link>
+
+        <router-link to="/login" class="nav-button">
+          <span class="button-text">Login</span>
+          <div class="button-glow"></div>
+        </router-link>
       </div>
     </nav>
 

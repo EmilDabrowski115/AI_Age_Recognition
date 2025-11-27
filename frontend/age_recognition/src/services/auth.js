@@ -28,6 +28,8 @@ class AuthService {
     }
   }
 
+  
+
   // Logout method
   logout() {
     this.isAuthenticated = false

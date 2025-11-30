@@ -1,17 +1,18 @@
 from fastapi import APIRouter, UploadFile, File, Depends, HTTPException
 from fastapi.responses import JSONResponse
 from sqlalchemy.orm import Session
-from backend.app import app
-from backend.database import get_db
-from backend.models import User, Prediction
+from backend.database.database import get_db
+from backend.database.models import Prediction
 import uuid
 import os
+
+router = APIRouter()
 
 # Directory to store uploaded images
 UPLOAD_DIR = "data/uploads"
 os.makedirs(UPLOAD_DIR, exist_ok=True)
 
-@app.post("/getAge")
+@router.post("/getAge")
 async def get_age(
     user_id: int,  # in future, you can get from JWT token
     file: UploadFile = File(...),
@@ -38,7 +39,6 @@ async def get_age(
         raise HTTPException(status_code=500, detail=f"Failed to save file: {e}")
 
     # Step 2: Call your AI model (placeholder)
-    # TODO: Replace with actual AI prediction logic
     predicted_age = 25
     confidence = 0.92
 

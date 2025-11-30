@@ -1,66 +1,137 @@
 <template>
   <div class="register-page">
     <div class="register-container">
-      <h1>Create Account</h1>
-
-      <form @submit.prevent="handleSubmit" class="register-form">
+      <h1>Age Verification</h1>
+      <form @submit.prevent="handleAgeVerify" class="register-form" v-if="!ageVerified">
         <div class="form-group">
-          <label for="username">Username</label>
+          <label for="image">Upload your photo</label>
           <input
-              id="username"
-              type="text"
-              v-model="formData.username"
+              id="image"
+              type="file"
+              accept="image/*"
+              @change="handleFileChange"
               required
               class="form-input"
           />
         </div>
 
-        <div class="form-group">
-          <label for="password">Password</label>
-          <input
-              id="password"
-              type="password"
-              v-model="formData.password"
-              required
-              class="form-input"
-          />
+        <div v-if="preview" class="preview-box">
+          <img :src="preview" alt="Preview" class="preview-img" />
         </div>
 
-        <button type="submit" class="submit-button" :disabled="isSubmitting">
-          <span v-if="!isSubmitting">Register</span>
-          <span v-else>Registering...</span>
+        <button type="submit" class="submit-button" :disabled="!file || isSubmitting">
+          <span v-if="!isSubmitting">Verify Age</span>
+          <span v-else>Verifying...</span>
         </button>
       </form>
+
+      <div v-if="ageVerified">
+        <p>Your age is: {{ userAge }}</p>
+        <p v-if="isOldEnough" style="color:lightgreen;">You are old enough to register.</p>
+        <p v-else style="color:tomato;">You are not old enough to register.</p>
+
+        <div v-if="isOldEnough">
+          <h1>Create Account</h1>
+          <form @submit.prevent="handleRegister" class="register-form">
+            <div class="form-group">
+              <label for="username">Username</label>
+              <input
+                  id="username"
+                  type="text"
+                  v-model="formData.username"
+                  required
+                  class="form-input"
+              />
+            </div>
+
+            <div class="form-group">
+              <label for="password">Password</label>
+              <input
+                  id="password"
+                  type="password"
+                  v-model="formData.password"
+                  required
+                  class="form-input"
+              />
+            </div>
+
+            <button type="submit" class="submit-button" :disabled="isRegistering">
+              <span v-if="!isRegistering">Register</span>
+              <span v-else>Registering...</span>
+            </button>
+          </form>
+        </div>
+      </div>
     </div>
   </div>
 </template>
 
 <script setup>
-import { reactive, ref } from 'vue'
+import { ref, reactive } from 'vue'
 import { useRouter } from 'vue-router'
 import userService from '../services/userService.js'
 
 const router = useRouter()
+
+const file = ref(null)
+const preview = ref(null)
+
+const isSubmitting = ref(false)
+const isRegistering = ref(false)
+
+const ageVerified = ref(false)
+const userAge = ref(null)
+const isOldEnough = ref(false)
 
 const formData = reactive({
   username: '',
   password: ''
 })
 
-const isSubmitting = ref(false)
+const handleFileChange = (event) => {
+  const selected = event.target.files[0]
+  file.value = selected
 
-const handleSubmit = async () => {
+  if (selected) {
+    preview.value = URL.createObjectURL(selected)
+  }
+}
+
+const handleAgeVerify = async () => {
+
+  if (!file.value) return
+
   isSubmitting.value = true
+
+  const formDataForAge = new FormData()
+  formDataForAge.append('image', file.value)
+
+  try {
+    const response = await userService.ageVerify(formDataForAge)
+    userAge.value = response.data.age
+    ageVerified.value = true
+    isOldEnough.value = userAge.value >= 18
+  } catch (err) {
+    alert('Age verification failed. Please try again.')
+  } finally {
+    isSubmitting.value = false
+  }
+}
+
+const handleRegister = async () => {
+  isRegistering.value = true
+
   try {
     await userService.register({
       username: formData.username,
       password: formData.password
     })
-    router.push('/') // redirect po rejestracji
+    router.push('/') // redirect after registration
   } catch (err) {
     console.error('Registration failed:', err)
+    alert('Registration failed. Please try again.')
   } finally {
-    isSubmitting.value = false
+    isRegistering.value = false
   }
 }
 </script>
@@ -76,7 +147,7 @@ const handleSubmit = async () => {
 }
 
 .register-container {
-  background: rgba(255,255,255,0.08);
+  background: rgba(255, 255, 255, 0.08);
   padding: 2rem;
   border-radius: 12px;
   width: 100%;
@@ -93,6 +164,25 @@ const handleSubmit = async () => {
   border-radius: 6px;
   border: none;
   margin-top: 0.3rem;
+  background: #fff;
+}
+
+.preview-box {
+  width: 200px;
+  height: 200px;
+  margin: 1rem auto;
+  border-radius: 12px;
+  overflow: hidden;
+  border: 2px solid #00ffff;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.preview-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
 }
 
 .submit-button {

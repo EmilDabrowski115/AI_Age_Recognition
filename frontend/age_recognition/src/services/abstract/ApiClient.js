@@ -2,7 +2,7 @@ import axios from 'axios';
 
 
 //idk jaki port
-const API_BASE_URL = 'http://localhost:8080';
+const API_BASE_URL = 'http://localhost:8000';
 
 class ApiClient {
     constructor() {

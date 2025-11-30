@@ -3,8 +3,8 @@
     <div class="register-container">
       <h1>Age Verification</h1>
 
-      <form @submit.prevent="handleSubmit" class="register-form">
-
+      <!-- Age verification form -->
+      <form @submit.prevent="handleVerifyAge" class="register-form" v-if="!ageVerified">
         <div class="form-group">
           <label for="image">Upload your photo</label>
           <input
@@ -17,57 +17,133 @@
           />
         </div>
 
-        <!-- PODGLĄD ZDJĘCIA -->
+        <!-- Photo preview -->
         <div v-if="preview" class="preview-box">
           <img :src="preview" alt="Preview" class="preview-img" />
         </div>
 
-        <button type="submit" class="submit-button" :disabled="isSubmitting || !file">
-          <span v-if="!isSubmitting">Verify Age</span>
+        <button
+            type="submit"
+            class="submit-button"
+            :disabled="isVerifying || !file"
+        >
+          <span v-if="!isVerifying">Verify Age</span>
           <span v-else>Verifying...</span>
         </button>
-
       </form>
+
+      <!-- After age verified -->
+      <div v-if="ageVerified">
+        <p>Your verified age: {{ userAge }}</p>
+        <p v-if="isOldEnough" style="color: lightgreen;">
+          You are old enough to register.
+        </p>
+        <p v-else style="color: tomato;">
+          You are not old enough to register.
+        </p>
+
+        <!-- Registration form only if old enough -->
+        <div v-if="isOldEnough">
+          <h1>Create Account</h1>
+          <form @submit.prevent="handleRegister" class="register-form">
+            <div class="form-group">
+              <label for="username">Username</label>
+              <input
+                  id="username"
+                  type="text"
+                  v-model="formData.username"
+                  required
+                  class="form-input"
+              />
+            </div>
+
+            <div class="form-group">
+              <label for="password">Password</label>
+              <input
+                  id="password"
+                  type="password"
+                  v-model="formData.password"
+                  required
+                  class="form-input"
+              />
+            </div>
+
+            <button type="submit" class="submit-button" :disabled="isRegistering">
+              <span v-if="!isRegistering">Register</span>
+              <span v-else>Registering...</span>
+            </button>
+          </form>
+        </div>
+      </div>
     </div>
   </div>
 </template>
 
 <script setup>
-import { ref } from 'vue'
-import axios from 'axios'
+import { ref, reactive } from 'vue'
+import { useRouter } from 'vue-router'
+import userService from '../services/userService.js'
+
+const router = useRouter()
 
 const file = ref(null)
 const preview = ref(null)
-const isSubmitting = ref(false)
+
+const isVerifying = ref(false)
+const isRegistering = ref(false)
+
+const ageVerified = ref(false)
+const userAge = ref(null)
+const isOldEnough = ref(false)
+
+const formData = reactive({
+  username: '',
+  password: ''
+})
 
 const handleFileChange = (event) => {
   const selected = event.target.files[0]
   file.value = selected
-
   if (selected) {
     preview.value = URL.createObjectURL(selected)
   }
 }
 
-const handleSubmit = async () => {
+const handleVerifyAge = async () => {
   if (!file.value) return
 
-  isSubmitting.value = true
-
-  const formData = new FormData()
-  formData.append('image', file.value)
+  isVerifying.value = true
+  const formDataForAge = new FormData()
+  formDataForAge.append('image', file.value)
 
   try {
-    const response = await axios.post('/getAge', formData, {
-      headers: { 'Content-Type': 'multipart/form-data' }
-    })
-
-    console.log('Age verification result:', response.data)
-
+    // const response = await userService.ageVerify(formDataForAge)
+    // userAge.value = response.age
+    ageVerified.value = true
+    isOldEnough.value = userAge.value >= 18 // minimum age limit
   } catch (err) {
+    ageVerified.value = true
     console.error('Verification failed:', err)
+    alert('Age verification failed. Please try again.')
   } finally {
-    isSubmitting.value = false
+    isVerifying.value = false
+    ageVerified.value = true
+  }
+}
+
+const handleRegister = async () => {
+  isRegistering.value = true
+  try {
+    await userService.register({
+      username: formData.username,
+      password: formData.password
+    })
+    router.push('/')
+  } catch (err) {
+    console.error('Registration failed:', err)
+    alert('Registration failed. Please try again.')
+  } finally {
+    isRegistering.value = false
   }
 }
 </script>
@@ -83,7 +159,7 @@ const handleSubmit = async () => {
 }
 
 .register-container {
-  background: rgba(255,255,255,0.08);
+  background: rgba(255, 255, 255, 0.08);
   padding: 2rem;
   border-radius: 12px;
   width: 100%;
@@ -103,7 +179,6 @@ const handleSubmit = async () => {
   background: #fff;
 }
 
-/* KWADRAT NA PODGLĄD ZDJĘCIA */
 .preview-box {
   width: 200px;
   height: 200px;

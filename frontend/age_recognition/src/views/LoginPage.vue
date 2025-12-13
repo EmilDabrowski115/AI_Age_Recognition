@@ -31,6 +31,7 @@
           <span v-else>Logging in...</span>
         </button>
       </form>
+      <button @click="goBack" class="back-button">Back to Home</button>
     </div>
   </div>
 </template>
@@ -62,6 +63,10 @@ const handleSubmit = async () => {
   } finally {
     isSubmitting.value = false
   }
+}
+
+const goBack = () => {
+  router.push('/')
 }
 </script>
 
@@ -104,5 +109,17 @@ const handleSubmit = async () => {
   color: #000;
   font-weight: bold;
   cursor: pointer;
+}
+
+.back-button {
+  width: 100%;
+  padding: 1rem;
+  background: #ff00ff;
+  border: none;
+  border-radius: 6px;
+  color: #000;
+  font-weight: bold;
+  cursor: pointer;
+  margin-top: 1rem;
 }
 </style>

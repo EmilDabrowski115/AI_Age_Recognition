@@ -23,9 +23,10 @@ Aplikacja webowa wykorzystująca sztuczną inteligencję do automatycznej predyk
 - TensorFlow/PyTorch - predykcja wieku
 - NumPy, Pillow - przetwarzanie obrazów
 
-**Frontend (planowane):**
-- HTML5, CSS3, JavaScript
-- WebRTC - dostęp do kamery
+**Frontend:**
+- Vue.js 3 (Composition API)
+- Vite
+- Vue Router
 
 ---
 
@@ -52,8 +53,22 @@ AI_Age_Recognition/
 │   └── utils/
 │       └── password_hashing.py   # SHA-256
 ├── frontend/
-│   ├── templates/                # HTML (TODO)
-│   └── static/                   # CSS, JS (TODO)
+│   └── age_recognition/
+│       ├── src/
+│       │   ├── App.vue
+│       │   ├── main.js
+│       │   ├── router/
+│       │   │   └── index.js
+│       │   ├── services/
+│       │   │   ├── api.js
+│       │   │   ├── auth.js
+│       │   │   └── userService.js
+│       │   └── views/
+│       │       ├── LandingPage.vue
+│       │       ├── LoginPage.vue
+│       │       └── RegisterPage.vue
+│       ├── index.html
+│       └── package.json
 ├── data/
 │   ├── dataset/                  # Dane treningowe
 │   └── uploads/                  # Przesłane zdjęcia
@@ -274,12 +289,12 @@ curl -X POST http://localhost:8000/getAge \
 - [ ] System logowania (logger)
 
 **Frontend:**
-- [ ] Strona główna (index.html)
-- [ ] Formularz login/signup
-- [ ] Panel użytkownika (dashboard)
-- [ ] Interfejs kamery (WebRTC)
+- [x] Strona główna (LandingPage.vue)
+- [x] Formularz login/signup (LoginPage.vue, RegisterPage.vue)
+- [] Panel użytkownika (dashboard)
+- [x] Interfejs kamery (WebRTC)
 - [ ] Wyświetlanie wyników predykcji
-- [ ] CSS stylizacja
+- [x] CSS stylizacja
 
 **Bezpieczeństwo:**
 - [ ] Zmiana SHA-256 na bcrypt

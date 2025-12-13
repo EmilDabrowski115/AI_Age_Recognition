@@ -13,7 +13,7 @@
       <div class="nav-brand">
         <h1 class="brand-text">AI Age Recognition</h1>
       </div>
-      <div class="nav-actions">
+      <div class="nav-links">
         <router-link to="/register" class="nav-button">
           <span class="button-text">Register</span>
           <div class="button-glow"></div>
@@ -215,6 +215,13 @@ const getParticleStyle = (index) => {
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
+}
+
+.nav-links {
+  display: flex;
+  gap: 1rem;
+  z-index: 10;
+  position: relative;
 }
 
 .nav-button {

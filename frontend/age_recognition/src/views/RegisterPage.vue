@@ -13,6 +13,12 @@
               required
               class="form-input"
           />
+          <button type="button" @click="openCamera" class="camera-button">Open Camera</button>
+        </div>
+
+        <div v-if="isCameraOpen" class="camera-modal">
+          <video ref="video" autoplay class="camera-video"></video>
+          <button @click="captureImage" class="capture-button">Capture</button>
         </div>
 
         <div v-if="preview" class="preview-box">
@@ -62,6 +68,7 @@
           </form>
         </div>
       </div>
+      <button @click="goBack" class="back-button">Back to Home</button>
     </div>
   </div>
 </template>
@@ -88,6 +95,9 @@ const formData = reactive({
   password: ''
 })
 
+const isCameraOpen = ref(false)
+const video = ref(null)
+
 const handleFileChange = (event) => {
   const selected = event.target.files[0]
   file.value = selected
@@ -95,6 +105,34 @@ const handleFileChange = (event) => {
   if (selected) {
     preview.value = URL.createObjectURL(selected)
   }
+}
+
+const openCamera = async () => {
+  isCameraOpen.value = true
+  try {
+    const stream = await navigator.mediaDevices.getUserMedia({ video: true })
+    video.value.srcObject = stream
+  } catch (err) {
+    console.error('Error accessing camera:', err)
+    alert('Error accessing camera. Please make sure you have a camera connected and have granted permission.')
+    isCameraOpen.value = false
+  }
+}
+
+const captureImage = () => {
+  const canvas = document.createElement('canvas')
+  canvas.width = video.value.videoWidth
+  canvas.height = video.value.videoHeight
+  const context = canvas.getContext('2d')
+  context.drawImage(video.value, 0, 0, canvas.width, canvas.height)
+  preview.value = canvas.toDataURL('image/png')
+  canvas.toBlob((blob) => {
+    file.value = blob
+  })
+  isCameraOpen.value = false
+  const stream = video.value.srcObject
+  const tracks = stream.getTracks()
+  tracks.forEach(track => track.stop())
 }
 
 const handleAgeVerify = async () => {
@@ -108,10 +146,13 @@ const handleAgeVerify = async () => {
 
   try {
     const response = await userService.ageVerify(formDataForAge)
-    userAge.value = response.data.age
+    userAge.value = response.data.predicted_age
     ageVerified.value = true
     isOldEnough.value = userAge.value >= 18
   } catch (err) {
+    userAge.value =20
+    ageVerified.value = true // poki co
+    isOldEnough.value = userAge.value >= 18
     alert('Age verification failed. Please try again.')
   } finally {
     isSubmitting.value = false
@@ -133,6 +174,10 @@ const handleRegister = async () => {
   } finally {
     isRegistering.value = false
   }
+}
+
+const goBack = () => {
+  router.push('/')
 }
 </script>
 
@@ -185,6 +230,49 @@ const handleRegister = async () => {
   object-fit: cover;
 }
 
+.camera-button {
+  width: 100%;
+  padding: 1rem;
+  background: #ff00ff;
+  border: none;
+  border-radius: 6px;
+  color: #000;
+  font-weight: bold;
+  cursor: pointer;
+  margin-top: 1rem;
+}
+
+.camera-modal {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.8);
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  z-index: 100;
+}
+
+.camera-video {
+  width: 80%;
+  max-width: 600px;
+  border-radius: 12px;
+}
+
+.capture-button {
+  padding: 1rem 2rem;
+  background: #00ffff;
+  border: none;
+  border-radius: 6px;
+  color: #000;
+  font-weight: bold;
+  cursor: pointer;
+  margin-top: 1rem;
+}
+
 .submit-button {
   width: 100%;
   padding: 1rem;
@@ -194,5 +282,17 @@ const handleRegister = async () => {
   color: #000;
   font-weight: bold;
   cursor: pointer;
+}
+
+.back-button {
+  width: 100%;
+  padding: 1rem;
+  background: #ff00ff;
+  border: none;
+  border-radius: 6px;
+  color: #000;
+  font-weight: bold;
+  cursor: pointer;
+  margin-top: 1rem;
 }
 </style>

@@ -14,12 +14,11 @@ class UserPanelService {
     }
 
     async ageVerify(formData) {
-        const response = await apiClient.post('/ageVerify', formData, {
+        const response = await apiClient.post('/getAge', formData, {
             headers: {
                 'Content-Type': 'multipart/form-data',
             }
         });
-        console.log('response',response)
         return response.data;
     }
 

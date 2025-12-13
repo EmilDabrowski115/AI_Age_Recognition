@@ -7,6 +7,7 @@
       <form @submit.prevent="handleVerifyAge" class="register-form" v-if="!ageVerified">
         <div class="form-group">
           <label for="image">Upload your photo</label>
+          <p class="hint">Please upload a clear photo with your face visible. Make sure only one face is in the photo.</p>
           <input
               id="image"
               type="file"
@@ -22,6 +23,11 @@
           <img :src="preview" alt="Preview" class="preview-img" />
         </div>
 
+        <!-- Error message display -->
+        <div v-if="errorMessage" class="error-box">
+          <p>{{ errorMessage }}</p>
+        </div>
+
         <button
             type="submit"
             class="submit-button"
@@ -34,12 +40,16 @@
 
       <!-- After age verified -->
       <div v-if="ageVerified">
-        <p>Your verified age: {{ userAge }}</p>
-        <p v-if="isOldEnough" style="color: lightgreen;">
-          You are old enough to register.
+        <div class="verification-result">
+          <h2>Verification Complete</h2>
+          <p class="age-result">Predicted Age: <strong>{{ userAge }}</strong> years</p>
+          <p class="confidence-result">Confidence: <strong>{{ (confidence * 100).toFixed(1) }}%</strong></p>
+        </div>
+        <p v-if="isOldEnough" class="status-message success">
+          ✓ You are old enough to register.
         </p>
-        <p v-else style="color: tomato;">
-          You are not old enough to register.
+        <p v-else class="status-message error">
+          ✗ You are not old enough to register (must be 18+).
         </p>
 
         <!-- Registration form only if old enough -->
@@ -95,6 +105,8 @@ const isRegistering = ref(false)
 const ageVerified = ref(false)
 const userAge = ref(null)
 const isOldEnough = ref(false)
+const confidence = ref(null)
+const errorMessage = ref(null)
 
 const formData = reactive({
   username: '',
@@ -113,21 +125,34 @@ const handleVerifyAge = async () => {
   if (!file.value) return
 
   isVerifying.value = true
+  errorMessage.value = null
+
   const formDataForAge = new FormData()
-  formDataForAge.append('image', file.value)
+  formDataForAge.append('file', file.value)  // Backend expects 'file' not 'image'
 
   try {
-    // const response = await userService.ageVerify(formDataForAge)
-    // userAge.value = response.age
-    ageVerified.value = true
-    isOldEnough.value = userAge.value >= 18 // minimum age limit
+    // Use a temporary user_id (1) for now - in production, get this from auth
+    const response = await userService.ageVerify(formDataForAge, 1)
+
+    console.log('Age verification response:', response)
+
+    if (response.success) {
+      userAge.value = response.predicted_age
+      confidence.value = response.confidence
+      ageVerified.value = true
+      isOldEnough.value = userAge.value >= 18 // minimum age limit
+    } else {
+      throw new Error(response.error || 'Verification failed')
+    }
   } catch (err) {
-    ageVerified.value = true
     console.error('Verification failed:', err)
-    alert('Age verification failed. Please try again.')
+
+    // Extract error message from API response
+    const errMsg = err.response?.data?.detail || err.message || 'Age verification failed. Please try again.'
+    errorMessage.value = errMsg
+    alert(errMsg)
   } finally {
     isVerifying.value = false
-    ageVerified.value = true
   }
 }
 
@@ -206,5 +231,65 @@ const handleRegister = async () => {
   color: #000;
   font-weight: bold;
   cursor: pointer;
+}
+
+.submit-button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.verification-result {
+  background: rgba(0, 255, 255, 0.1);
+  padding: 1.5rem;
+  border-radius: 8px;
+  margin: 1rem 0;
+  border: 1px solid #00ffff;
+}
+
+.verification-result h2 {
+  margin-top: 0;
+  color: #00ffff;
+  font-size: 1.3rem;
+}
+
+.age-result,
+.confidence-result {
+  font-size: 1.1rem;
+  margin: 0.5rem 0;
+}
+
+.status-message {
+  padding: 1rem;
+  border-radius: 6px;
+  margin: 1rem 0;
+  font-weight: bold;
+  font-size: 1.1rem;
+}
+
+.status-message.success {
+  background: rgba(0, 255, 0, 0.2);
+  color: lightgreen;
+  border: 1px solid lightgreen;
+}
+
+.status-message.error {
+  background: rgba(255, 0, 0, 0.2);
+  color: tomato;
+  border: 1px solid tomato;
+}
+
+.hint {
+  font-size: 0.85rem;
+  color: #aaa;
+  margin: 0.3rem 0;
+}
+
+.error-box {
+  background: rgba(255, 0, 0, 0.2);
+  border: 1px solid tomato;
+  padding: 1rem;
+  border-radius: 6px;
+  margin: 1rem 0;
+  color: tomato;
 }
 </style>

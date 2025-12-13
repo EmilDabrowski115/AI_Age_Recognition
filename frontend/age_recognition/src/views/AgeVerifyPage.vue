@@ -128,24 +128,33 @@ const handleVerifyAge = async () => {
   errorMessage.value = null
 
   const formDataForAge = new FormData()
-  formDataForAge.append('file', file.value)  // Backend expects 'file' not 'image'
+  formDataForAge.append('image', file.value)  // Backend expects 'image'
 
   try {
-    // Use a temporary user_id (1) for now - in production, get this from auth
     const response = await userService.ageVerify(formDataForAge, 1)
 
-    console.log('Age verification response:', response)
+    console.log('✓ Age verification response:', response)
+    console.log('✓ Response type:', typeof response)
+    console.log('✓ Response success:', response?.success)
+    console.log('✓ Response age:', response?.predicted_age)
 
-    if (response.success) {
+    // Check if response exists and has the success field
+    if (response && response.success === true) {
       userAge.value = response.predicted_age
       confidence.value = response.confidence
       ageVerified.value = true
       isOldEnough.value = userAge.value >= 18 // minimum age limit
+      console.log('✓ Age verification successful!', { userAge: userAge.value, confidence: confidence.value })
     } else {
-      throw new Error(response.error || 'Verification failed')
+      throw new Error(response?.error || 'Verification failed - no success in response')
     }
   } catch (err) {
-    console.error('Verification failed:', err)
+    console.error('❌ Verification failed:', err)
+    console.error('❌ Error details:', {
+      message: err.message,
+      response: err.response,
+      data: err.response?.data
+    })
 
     // Extract error message from API response
     const errMsg = err.response?.data?.detail || err.message || 'Age verification failed. Please try again.'

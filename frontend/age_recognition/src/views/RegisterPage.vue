@@ -51,6 +51,17 @@
             </div>
 
             <div class="form-group">
+              <label for="email">Email</label>
+              <input
+                  id="email"
+                  type="email"
+                  v-model="formData.email"
+                  required
+                  class="form-input"
+              />
+            </div>
+
+            <div class="form-group">
               <label for="password">Password</label>
               <input
                   id="password"
@@ -92,6 +103,7 @@ const isOldEnough = ref(false)
 
 const formData = reactive({
   username: '',
+  email: '',
   password: ''
 })
 
@@ -146,14 +158,19 @@ const handleAgeVerify = async () => {
 
   try {
     const response = await userService.ageVerify(formDataForAge)
-    userAge.value = response.data.predicted_age
-    ageVerified.value = true
-    isOldEnough.value = userAge.value >= 18
+    console.log('✓ Age verification response:', response)
+
+    if (response && response.success) {
+      userAge.value = response.predicted_age
+      ageVerified.value = true
+      isOldEnough.value = userAge.value >= 18
+      console.log('✓ Age verified:', userAge.value, 'Confidence:', response.confidence)
+    } else {
+      throw new Error('Verification failed - invalid response')
+    }
   } catch (err) {
-    userAge.value =20
-    ageVerified.value = true // poki co
-    isOldEnough.value = userAge.value >= 18
-    alert('Age verification failed. Please try again.')
+    console.error('❌ Age verification error:', err)
+    alert('Age verification failed: ' + (err.response?.data?.detail || err.message))
   } finally {
     isSubmitting.value = false
   }
@@ -165,12 +182,15 @@ const handleRegister = async () => {
   try {
     await userService.register({
       username: formData.username,
+      email: formData.email,
       password: formData.password
     })
-    router.push('/') // redirect after registration
+    alert('Account created successfully!')
+    router.push('/login') // redirect to login after registration
   } catch (err) {
     console.error('Registration failed:', err)
-    alert('Registration failed. Please try again.')
+    const errMsg = err.response?.data?.message || 'Registration failed. Please try again.'
+    alert(errMsg)
   } finally {
     isRegistering.value = false
   }

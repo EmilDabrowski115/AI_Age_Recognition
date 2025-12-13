@@ -26,21 +26,26 @@ def login(request: LoginRequest, db: Session = Depends(get_db)):
 
 class SignupRequest(BaseModel):
     username: str
+    email: str
     password: str
+
 @router.post("/signup")
 def signup(request: SignupRequest, db: Session = Depends(get_db)):
-    
-    # Check if username exists
-    if db.query(User).filter(User.username == request.username).first():
-        return JSONResponse({"status": "error", "message": "Invalid signup details"})
-    
+
+    # Check if username or email exists
+    if db.query(User).filter(
+        (User.username == request.username) | (User.email == request.email)
+    ).first():
+        return JSONResponse({"status": "error", "message": "Username or email already exists"})
+
     # Hash password and create new user
     new_user = User(
         username=request.username,
+        email=request.email,
         password_hash=hash_password(request.password)
     )
     db.add(new_user)
     db.commit()
     db.refresh(new_user)
-    
+
     return JSONResponse({"status": "ok", "message": "Account created successfully"})

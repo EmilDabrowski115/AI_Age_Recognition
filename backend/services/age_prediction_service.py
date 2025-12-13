@@ -1,9 +1,15 @@
 import cv2
 import numpy as np
-import tensorflow as tf
-from tensorflow.keras.applications import mobilenet_v2
 import os
 from typing import Tuple, Optional
+
+# Force TensorFlow to use CPU only
+os.environ['CUDA_VISIBLE_DEVICES'] = '-1'
+
+import tensorflow as tf
+# Use TensorFlow's bundled Keras 2.x instead of standalone Keras 3.x
+import tf_keras as keras
+from tf_keras.applications import mobilenet_v2
 
 class AgePredictionService:
     """
@@ -35,25 +41,14 @@ class AgePredictionService:
     def _load_model(self):
         """Load the trained age prediction model."""
         try:
-            # Try loading with compile=False to avoid optimizer issues
-            self.model = tf.keras.models.load_model(
+            # Use TF-Keras (Keras 2.x) to load the model
+            self.model = keras.models.load_model(
                 self.model_path,
-                compile=False,
-                safe_mode=False  # Disable safe mode for legacy models
+                compile=False  # Don't compile - we only need inference
             )
             print(f"✓ Model loaded from {self.model_path}")
         except Exception as e:
-            print(f"⚠️ First load attempt failed, trying legacy format...")
-            try:
-                # Try with legacy loading for older Keras models
-                import h5py
-                self.model = tf.keras.models.load_model(
-                    self.model_path,
-                    compile=False
-                )
-                print(f"✓ Model loaded with legacy support from {self.model_path}")
-            except Exception as e2:
-                raise RuntimeError(f"Failed to load model from {self.model_path}: {e2}")
+            raise RuntimeError(f"Failed to load model from {self.model_path}: {e}")
 
     def _load_face_detector(self):
         """Load the Haar Cascade face detector."""
